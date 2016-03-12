@@ -1,7 +1,8 @@
 (function () {
     var video = document.querySelector('.camera__video'),
-        canvas = document.querySelector('.camera__canvas');
-
+        canvas = document.querySelector('.camera__canvas'),
+        context = canvas.getContext('2d');
+        
     var getVideoStream = function (callback) {
         navigator.getUserMedia = navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
@@ -26,58 +27,38 @@
         }
     };
 
-    var applyFilterToPixel = function (pixel) {
+    var applyFilter = function () {
+        var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        var filterName = document.querySelector('.controls__filter').value;
         var filters = {
-            invert: function (pixel) {
-                pixel[0] = 255 - pixel[0];
-                pixel[1] = 255 - pixel[1];
-                pixel[2] = 255 - pixel[2];
-
-                return pixel;
+            invert: function (r,g,b) {
+                for (var i = 0; i < pixels.data.length; i = i + 4){
+                    pixels.data[i] = 255 - pixels.data[i];
+                    pixels.data[i + 1] = 255 - pixels.data[i + 1];
+                    pixels.data[i + 2] = 255 - pixels.data[i + 2];
+                }
             },
-            grayscale: function (pixel) {
-                var r = pixel[0];
-                var g = pixel[1];
-                var b = pixel[2];
-                var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-                pixel[0] = pixel[1] = pixel[2] = v;
-
-                return pixel;
+            grayscale: function (r,g,b) {
+                for (var i = 0; i < pixels.data.length; i = i + 4){
+                    pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = pixels.data[i ] * 0.2126 + pixels.data[i + 1] * .7152 + pixels.data[i + 2] * 0.0722;
+                }
             },
-            threshold: function (pixel) {
-                var r = pixel[0];
-                var g = pixel[1];
-                var b = pixel[2];
-                var v = (0.2126 * r + 0.7152 * g + 0.0722 * b >= 128) ? 255 : 0;
-                pixel[0] = pixel[1] = pixel[2] = v;
-
-                return pixel;
+            threshold: function (r,g,b) {
+                for (var i = 0; i < pixels.data.length; i = i + 4){
+                    var color = (0.2126 * pixels.data[i] + 0.7152 * pixels.data[i + 1] + 0.0722 * pixels.data[i + 2] >= 128) ? 255 : 0;
+                    pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = color;
+                }
             }
         };
-
-        var filterName = document.querySelector('.controls__filter').value;
-
-        return filters[filterName](pixel);
-    };
-
-    var applyFilter = function () {
-        for (var x = 0; x < canvas.width; x++) {
-            for (var y = 0; y < canvas.height; y++) {
-                var pixel = canvas.getContext('2d').getImageData(x, y, 1, 1);
-
-                pixel.data = applyFilterToPixel(pixel.data);
-
-                canvas.getContext('2d').putImageData(pixel, x, y);
-            }
-        }
+        filters[filterName]();
+        context.putImageData(pixels, 0, 0);
     };
 
     var captureFrame = function () {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        context.drawImage(video, 0, 0);
         applyFilter();
     };
 
