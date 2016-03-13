@@ -7,7 +7,6 @@
         navigator.getUserMedia = navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia;
-
         if (navigator.getUserMedia) {
             navigator.getUserMedia({video: true},
                 function (stream) {
@@ -31,19 +30,19 @@
         var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
         var filterName = document.querySelector('.controls__filter').value;
         var filters = {
-            invert: function (r,g,b) {
+            invert: function () {
                 for (var i = 0; i < pixels.data.length; i = i + 4){
                     pixels.data[i] = 255 - pixels.data[i];
                     pixels.data[i + 1] = 255 - pixels.data[i + 1];
                     pixels.data[i + 2] = 255 - pixels.data[i + 2];
                 }
             },
-            grayscale: function (r,g,b) {
+            grayscale: function () {
                 for (var i = 0; i < pixels.data.length; i = i + 4){
                     pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = pixels.data[i ] * 0.2126 + pixels.data[i + 1] * .7152 + pixels.data[i + 2] * 0.0722;
                 }
             },
-            threshold: function (r,g,b) {
+            threshold: function () {
                 for (var i = 0; i < pixels.data.length; i = i + 4){
                     var color = (0.2126 * pixels.data[i] + 0.7152 * pixels.data[i + 1] + 0.0722 * pixels.data[i + 2] >= 128) ? 255 : 0;
                     pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = color;
